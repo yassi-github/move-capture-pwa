@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>UsingCamera</title>
+    <script defer src="main.js"></script>
+    <script async src="opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  </head>
+  <body>
+    <h1>UsingCamera</h1>
+    <p id="status">Now loading...</p>
+    <p id="count">Count: </p>
+    <div class="video-area" style="width: 100%; height: 100%;">
+      <video id="main-video"
+      style="border: 1px solid #000000;"></video>
+    </div>
+    <div class="canvas-area" style="width: 100%; height: 100%; position: relative; top: 80px;">
+    <div class="canvas-area" style="width: 100%; height: 100%;">
+      <canvas id="main-canvas"
+      style="border: 1px solid #000000;"></canvas>
+      <canvas id="output-canvas"
+      style="border: 1px solid #000000;"></canvas>
+    </div>
+    <div class="button-area">
+      <button id="startButton">start</button>
+      <button id="stopButton">stop</button>
+    </div>
+  </body>
+</html>

@@ -3,7 +3,7 @@
 // 動くと当然パーティクル数が変化する。普段動きのないとこを想定するなら4000ない程度かな？解像度による？
 // 初期らへんの値を記録して，そこからの時間当たり変化量をみる？
 // ゆっくり動くと検知されない？仕方ないか？
-
+ 
 console.log('loaded!!');
 const HEIGHT = 480;
 const WIDTH = 640;
@@ -25,8 +25,20 @@ let threshImg = null;
 let threshImg_Copy = null;
 let contours = null;
 let hierarchy = null;
-const startButton = document.getElementById('startButton');
 
+let countArray = new Array(10).fill(0);
+let weightArray = new Array(countArray.length);
+let weightSum = 0;
+let isPlaying = true;
+const startButton = document.getElementById('startButton');
+const stopButton = document.getElementById('stopButton');
+// startButton.addEventListener('click', () => {
+//   isPlaying = true;
+//   onOpenCvReady();
+// })
+stopButton.addEventListener('click', () => {
+  isPlaying = false;
+});
 function pass() {
   // nothing
 }
@@ -35,6 +47,11 @@ function pass() {
 function startCapture() {
   navigator.mediaDevices.getUserMedia({ video: true, audio: false })
   .then(function(stream) {
+    // if (!isPlaying) {
+    //   stream.getTracks().forEach(function(track) {
+    //     track.stop();
+    //   });
+    // }
     video.srcObject = stream;
     video.play();
   })
@@ -45,6 +62,17 @@ function startCapture() {
 
 // 処理
 function playVideo() {
+  if (!isPlaying) {
+    // stop both video and audio
+    video.srcObject.getTracks().forEach( (track) => {
+      track.stop();
+    });
+    video.srcObject = null;
+    dst.delete();
+    // delete()だけでは画面描画は消えないぽい
+    outputCanvas.getContext('2d').clearRect(0,0,WIDTH,HEIGHT);
+    return;
+  }
   let begin = Date.now();
   // context.drawImage(video, 0, 0, WIDTH, HEIGHT);
   // src.data.set(video.srcObject.data);
@@ -86,16 +114,45 @@ function processImg() {
   let count = cv.countNonZero(threshImg);
 
   document.getElementById('count').innerHTML = "Count: "+count;
-  if (count > 8000) {
+  if (detectMove(count)) {
     document.getElementById('status').innerHTML = "detected";
   } else {
     document.getElementById('status').innerHTML = "noMotion";
   }
+  
+  countArray.push(count);
+  countArray.shift();
 
   threshImg.copyTo(threshImg_Copy);
   cv.findContours(threshImg_Copy, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
   let color = new cv.Scalar(255, 255, 0);
   cv.drawContours(src, contours, -1, color, 3);
+}
+
+function detectMove(count) { // => boolean
+  // countarrayの加重平均を算出して
+  // その値がcountの差分が閾値より大きいなら，検知(true)
+  // それ以外は検知せず(false)
+  const threshCount = 500;
+
+  let weightedAve = null;
+  let countSum = 0;
+  // 重みづけ
+  for (let i = 0; i < countArray.length; i++) {
+    countSum += countArray[i] * weightArray[i];
+  }
+  // 加重平均
+  weightedAve = countSum / weightSum;
+  // console.log('weightedave: '+weightedAve);
+  // console.log('count: '+count);
+  // 加重平均とcountとの絶対値差分
+  absAveCount = weightedAve - count > 0 ?  weightedAve - count : count - weightedAve;
+  // console.log('absave: '+absAveCount);
+  // 閾値より大きいならtrue，小さいならfalse
+  if (absAveCount > threshCount) {
+    return true;
+  }
+  return false;
 }
 
 // main関数
@@ -125,7 +182,19 @@ function onOpenCvReady() {
     
     originalCV_8UC1.copyTo(dst);
     originalCV_8UC1.copyTo(before);
-    
+
+    // 重みづけを決めて重み配列を作成する
+    const PAD = 10000;
+    for (let x = 0; x < weightArray.length; x++) {
+      let weight;
+      weight = (weightArray.length / PAD) * (x * x);
+      weightArray[x] = Math.round(weight * PAD) / PAD;
+      weightSum += weightArray[x];
+    }
+    weightSum = Math.round(weightSum * PAD) / PAD;
+    console.log('weightarray: '+weightArray);
+    console.log('weightsum: '+weightSum);
+
     document.getElementById('status').innerHTML = 'Ready!';
     
     startCapture();

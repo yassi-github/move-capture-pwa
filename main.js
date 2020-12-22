@@ -136,9 +136,19 @@ function startCapture(opt) {
   }
 
   if (opt === 1) {
-    optionSetting.video.facingMode = {exact: "environment"};
+    optionSetting = {
+      video: true,
+      audio: false,
+      facingMode: {
+        exact: "environment"
+      }
+    };
   } else {
-    optionSetting.video.facingMode = "user";
+    optionSetting = {
+      video: true,
+      audio: false,
+      facingMode: "user"
+    };
   }
 
   navigator.mediaDevices.getUserMedia(optionSetting)

@@ -1,7 +1,7 @@
-// const WIDTH = document.getElementById('main-video').clientWidth;
-// const HEIGHT = document.getElementById('main-video').clientHeight;
-const WIDTH = 640;
-const HEIGHT = 480;
+const WIDTH = document.getElementById('main-video').clientWidth;
+const HEIGHT = document.getElementById('main-video').clientHeight;
+// const WIDTH = 640;
+// const HEIGHT = 480;
 const FPS = 30;
 let videoCapture = null;
 const video = document.getElementById('main-video');
@@ -151,11 +151,7 @@ function startCapture(opt) {
     };
   }
 
-  navigator.mediaDevices.getUserMedia({
-    video: true,
-    audio: false,
-    facingMode: "environment"
-  })
+  navigator.mediaDevices.getUserMedia(optionSetting)
   .then(function(stream) {
     video.srcObject = stream;
     video.play();

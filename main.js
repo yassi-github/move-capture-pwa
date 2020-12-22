@@ -1,7 +1,7 @@
-const WIDTH = document.getElementById('main-video').clientWidth;
-const HEIGHT = document.getElementById('main-video').clientHeight;
-// const WIDTH = 640;
-// const HEIGHT = 480;
+// const WIDTH = document.getElementById('main-video').clientWidth;
+// const HEIGHT = document.getElementById('main-video').clientHeight;
+const WIDTH = 640;
+const HEIGHT = 480;
 const FPS = 30;
 let videoCapture = null;
 const video = document.getElementById('main-video');
@@ -132,23 +132,22 @@ function startCapture(opt) {
   let optionSetting = {
     video: true,
     audio: false,
-    facingMode: null
-  }
+    facingMode: null,
+    width: {
+      min: 0,
+      max: 640
+    },
+    height: {
+      min: 0,
+      max: 480
+    },
+    aspectRatio: 640/480
+  };
 
   if (opt === 1) {
-    optionSetting = {
-      video: true,
-      audio: false,
-      facingMode: {
-        exact: "environment"
-      }
-    };
+    optionSetting.video.facingMode = "environment";
   } else {
-    optionSetting = {
-      video: true,
-      audio: false,
-      facingMode: "user"
-    };
+    optionSetting.video.facingMode = "user";
   }
 
   navigator.mediaDevices.getUserMedia(optionSetting)
@@ -275,6 +274,9 @@ function detectMove(count) { // => boolean
 }
 
 function resetAll() {
+  // WIDTH = outputCanvas.width = document.getElementById('main-video').clientWidth;
+  // HEIGHT = outputCanvas.height = document.getElementById('main-video').clientHeight;
+
   video.width = outputCanvas.width = WIDTH;
   video.height = outputCanvas.height = HEIGHT;
 
@@ -298,7 +300,7 @@ function resetAll() {
 
   isPlaying = true;
   isSoMoving = false;
-
+  
   originalCV_8UC1.copyTo(dst);
   originalCV_8UC1.copyTo(before);
 

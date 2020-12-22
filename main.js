@@ -72,7 +72,7 @@ function slackFetch() {
         },
         "accessory": {
           "type": "image",
-          "image_url": document.location.href+"/icon/icon64.png",
+          "image_url": "https://" +document.location.host +"/move-capture-pwa/icon/icon64.png",
           "alt_text": "Detected camera image"
         }
       }

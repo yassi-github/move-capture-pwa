@@ -11,10 +11,11 @@
   <body>
     <h1>UsingCamera</h1>
     <p id="status">Now loading...</p>
-    <p id="detect-status">To use the capture and webhook function, <br>
+    <p id="detect-status"></p>
+    <p id="explanation">To use the capture and webhook function, <br>
       please click the button below to set it up.</p>
-    <p id="count">Count: </p>
-    <div class="video-area" style="width: 100%; height: 100%;">
+    <p id="count" style="display: none;">Count: </p>
+    <div class="video-area" style="width: 100%; height: 100%; display: none;">
       <video id="main-video"
       style="border: 1px solid #000000;"></video>
     </div>
@@ -23,7 +24,8 @@
       style="border: 1px solid #000000;"></canvas>
     </div>
     <div class="button-area">
-      <button id="startButton">start</button>
+      <button id="startButton">start(front cam)</button>
+      <button id="startButtonAsEnvCamera">start(rear cam)</button>
       <button id="stopButton">stop</button>
     </div>
     <div>

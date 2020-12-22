@@ -1,5 +1,7 @@
-const HEIGHT = 480;
+// const WIDTH = document.getElementById('main-video').clientWidth;
+// const HEIGHT = document.getElementById('main-video').clientHeight;
 const WIDTH = 640;
+const HEIGHT = 480;
 const FPS = 30;
 let videoCapture = null;
 const video = document.getElementById('main-video');
@@ -27,13 +29,15 @@ let isSoMoving = false;
 let isWebhookGranted = false;
 
 const startButton = document.getElementById('startButton');
+const startButtonAsEnvCamera = document.getElementById('startButtonAsEnvCamera');
 const stopButton = document.getElementById('stopButton');
-const slackButtonElement = document.getElementById('slack-button');
+const slackButton = document.getElementById('slack-button');
 
-slackButtonElement.addEventListener('click', function() {
+slackButton.addEventListener('click', function() {
   if (document.getElementById('webhook-url').value === '') {
     return;
   } else if (isWebhookGranted === false) {
+    document.getElementById('explanation').remove();
     let newmsg = document.createTextNode('Enabled!');
     document.getElementsByName('webhook-form')[0].appendChild(newmsg);
     isWebhookGranted = true;
@@ -106,13 +110,38 @@ startButton.addEventListener('click', () => {
   console.log("reload...");
   isPlaying = true;
   resetAll();
-  startCapture();
+  startCapture(0);
+  setTimeout(playVideo, 0);
+});
+
+startButtonAsEnvCamera.addEventListener('click', () => {
+  console.log("reload...");
+  isPlaying = true;
+  resetAll();
+  startCapture(1);
   setTimeout(playVideo, 0);
 });
 
 // video要素にカメラをストリーム？
-function startCapture() {
-  navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+function startCapture(opt) {
+  if (video.srcObject != null) {
+    // stop both video and audio
+    stopButton.click();
+  }
+
+  let optionSetting = {
+    video: true,
+    audio: false,
+    facingMode: null
+  }
+
+  if (opt === 1) {
+    optionSetting.video.facingMode = {exact: "environment"};
+  } else {
+    optionSetting.video.facingMode = "user";
+  }
+
+  navigator.mediaDevices.getUserMedia(optionSetting)
   .then(function(stream) {
     video.srcObject = stream;
     video.play();
@@ -126,13 +155,15 @@ function startCapture() {
 function playVideo() {
   let begin = Date.now();
 
-  if (!isPlaying) {
+  if (!isPlaying && video.srcObject) {
     // stop both video and audio
     video.srcObject.getTracks().forEach( (track) => {
       track.stop();
     });
     video.srcObject = null;
-    dst.delete();
+    if (JSON.stringify(dst.data) != JSON.stringify(originalCV_8UC1.data)) {
+      dst.delete();
+    }
     // delete()だけでは画面描画は消えないぽい
     outputCanvas.getContext('2d').clearRect(0,0,WIDTH,HEIGHT);
     return;
@@ -192,7 +223,7 @@ function processImg() {
 
 function detectSoMoving() {
   const isZero = (element) => element === 0;
-  if (!detectArray.some(isZero)) {
+  if (!detectArray.some(isZero) && JSON.stringify(dst.data) != JSON.stringify(originalCV_8UC1.data)) {
     document.getElementById('detect-status').innerHTML = "moved!!";
     isSoMoving = true;
 
@@ -239,17 +270,25 @@ function resetAll() {
 
   videoCapture = new cv.VideoCapture(video);
   src = new cv.Mat(HEIGHT, WIDTH, cv.CV_8UC4);
-  originalCV_8UC1 = new cv.Mat(HEIGHT, WIDTH, cv.CV_8UC1);
   dst = new cv.Mat(HEIGHT, WIDTH, cv.CV_8UC1);
   before = new cv.Mat(HEIGHT, WIDTH, cv.CV_8UC1);
+  originalCV_8UC1 = new cv.Mat(HEIGHT, WIDTH, cv.CV_8UC1);
 
   grayImg = new cv.Mat(HEIGHT, WIDTH, cv.CV_8UC1);
   delta = new cv.Mat(HEIGHT, WIDTH, cv.CV_8UC1);
   threshImg = new cv.Mat(HEIGHT, WIDTH, cv.CV_8UC4);
-
   contours = new cv.MatVector();
   hierarchy = new cv.Mat();
   
+  countArray = new Array(10).fill(0);
+  weightArray = new Array(countArray.length);
+  weightSum = 0;
+
+  detectArray = new Array(countArray.length);
+
+  isPlaying = true;
+  isSoMoving = false;
+
   originalCV_8UC1.copyTo(dst);
   originalCV_8UC1.copyTo(before);
 
@@ -262,8 +301,6 @@ function resetAll() {
     weightSum += weightArray[x];
   }
   weightSum = Math.round(weightSum * PAD) / PAD;
-  console.log('weightarray: '+weightArray);
-  console.log('weightsum: '+weightSum);
 }
 
 // main関数
@@ -276,7 +313,7 @@ function onOpenCvReady() {
 
     document.getElementById('status').innerHTML = 'Ready!';
     
-    startCapture();
+    startCapture(0);
     setTimeout(playVideo, 0); // schedule first one.
   };
 }

@@ -151,7 +151,13 @@ function startCapture(opt) {
     };
   }
 
-  navigator.mediaDevices.getUserMedia(optionSetting)
+  navigator.mediaDevices.getUserMedia({
+    video: true,
+    audio: false,
+    facingMode: {
+      exact: "environment"
+    }
+  })
   .then(function(stream) {
     video.srcObject = stream;
     video.play();

@@ -154,9 +154,7 @@ function startCapture(opt) {
   navigator.mediaDevices.getUserMedia({
     video: true,
     audio: false,
-    facingMode: {
-      exact: "environment"
-    }
+    facingMode: "environment"
   })
   .then(function(stream) {
     video.srcObject = stream;

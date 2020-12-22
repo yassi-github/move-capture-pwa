@@ -134,11 +134,12 @@ function startCapture(opt) {
     audio: false,
     facingMode: null,
     width: {
-      ideal: 720
+      ideal: window.screen.width/2
     },
     height: {
-      ideal: 480
+      ideal: window.screen.height/2
     },
+    aspectRatio: window.screen.width/window.screen.height
   };
 
   if (opt === 1) {

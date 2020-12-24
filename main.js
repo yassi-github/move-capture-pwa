@@ -114,7 +114,7 @@ webhookUrlInputElement.addEventListener('input', function() {
 
 slackButton.addEventListener('click', function() {
   if (isWebhookGranted === false) {
-    document.getElementById('explanation').remove();
+    document.getElementById('explanation').style.display = 'none';
     let newmsg = document.createTextNode('Enabled!');
     document.getElementsByName('webhook-form')[0].appendChild(newmsg);
     isWebhookGranted = true;
@@ -334,7 +334,7 @@ function detectSoMoving() {
 
     captureImg();
 
-    if (isWebhookGranted) {
+    if (isWebhookGranted && isCaptureGranted) {
       sendSlackNotify();
     }
 

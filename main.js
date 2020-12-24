@@ -32,11 +32,18 @@ const startButton = document.getElementById('startButton');
 const startButtonAsEnvCamera = document.getElementById('startButtonAsEnvCamera');
 const stopButton = document.getElementById('stopButton');
 const slackButton = document.getElementById('slack-button');
+const webhookUrlInputElement = document.getElementById('webhook-url');
+
+webhookUrlInputElement.addEventListener('input', function() {
+  if (webhookUrlInputElement.value === '') {
+    slackButton.disabled = true;
+  } else {
+    slackButton.disabled = false;
+  }
+});
 
 slackButton.addEventListener('click', function() {
-  if (document.getElementById('webhook-url').value === '') {
-    return;
-  } else if (isWebhookGranted === false) {
+  if (isWebhookGranted === false) {
     document.getElementById('explanation').remove();
     let newmsg = document.createTextNode('Enabled!');
     document.getElementsByName('webhook-form')[0].appendChild(newmsg);
@@ -103,10 +110,17 @@ function slackFetch() {
 }
 
 stopButton.addEventListener('click', () => {
+  stopButton.disabled = true;
+  startButton.disabled = false;
+  startButtonAsEnvCamera.disabled = false;
   isPlaying = false;
 });
 
 startButton.addEventListener('click', () => {
+  stopButton.disabled = false;
+  startButton.disabled = true;
+  startButtonAsEnvCamera.disabled = true;
+
   console.log("reload...");
   isPlaying = true;
   resetAll();
@@ -115,6 +129,9 @@ startButton.addEventListener('click', () => {
 });
 
 startButtonAsEnvCamera.addEventListener('click', () => {
+  stopButton.disabled = false;
+  startButton.disabled = true;
+  startButtonAsEnvCamera.disabled = true;
   console.log("reload...");
   isPlaying = true;
   resetAll();
@@ -155,6 +172,8 @@ function startCapture(opt) {
   })
   .catch(function(err) {
     console.log("An error occurred! " + err);
+    document.body.innerHTML = 'Camera is NOT available!';
+    window.stop();
   });
 }
 

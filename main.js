@@ -1,3 +1,51 @@
+// service worker, chace, a2hs
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js')
+  .then(function(register) {
+    if (register.installing) {
+      console.log("sw installing");
+    } else if (register.waiting) {
+      console.log("sw installed");
+    } else if (register.active) {
+      console.log("sw active");
+    }
+  }).catch(function(error) {
+    console.log("Registration failed with " + error);
+  });
+}
+
+// a2hs template code
+
+let deferredPrompt;
+const addBtn = document.querySelector('.a2hs-button');
+addBtn.style.display = 'none';
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  // Prevent Chrome 67 and earlier from automatically showing the prompt
+  e.preventDefault();
+  // Stash the event so it can be triggered later.
+  deferredPrompt = e;
+  // Update UI to notify the user they can add to home screen
+  addBtn.style.display = 'block';
+
+  addBtn.addEventListener('click', (e) => {
+    // hide our user interface that shows our A2HS button
+    addBtn.style.display = 'none';
+    // Show the prompt
+    deferredPrompt.prompt();
+    // Wait for the user to respond to the prompt
+    deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('User accepted the A2HS prompt');
+        } else {
+          console.log('User dismissed the A2HS prompt');
+        }
+        deferredPrompt = null;
+      });
+  });
+});
+
 // const WIDTH = document.getElementById('main-video').clientWidth;
 // const HEIGHT = document.getElementById('main-video').clientHeight;
 const WIDTH = 640;
@@ -27,12 +75,34 @@ let detectArray = new Array(countArray.length);
 let isPlaying = true;
 let isSoMoving = false;
 let isWebhookGranted = false;
+let isCaptureGranted = false;
+
+let soMovingTimeoutID = null;
 
 const startButton = document.getElementById('startButton');
 const startButtonAsEnvCamera = document.getElementById('startButtonAsEnvCamera');
 const stopButton = document.getElementById('stopButton');
 const slackButton = document.getElementById('slack-button');
 const webhookUrlInputElement = document.getElementById('webhook-url');
+const captureButton = document.getElementById('capture-button');
+
+captureButton.addEventListener('click', function() {
+  document.getElementById('explanation').style.display = 'none';
+  if (captureButton.textContent === 'Enable Capture!') {
+    soMovingTimeoutID = setTimeout(detectSoMoving, 0);
+    isCaptureGranted = true;
+    captureButton.textContent = 'Capture Enabled!';
+    captureButton.disabled = true;
+    // captureButton.textContent = 'Disable Capture';
+    return;
+  }
+  // スタート，再スタート時になぜか誤検出するためコメントアウト
+  // if (captureButton.textContent === 'Disable Capture') {
+  //   isCaptureGranted = false;
+  //   captureButton.textContent = 'Enable Capture!';
+  //   return;
+  // }
+});
 
 webhookUrlInputElement.addEventListener('input', function() {
   if (webhookUrlInputElement.value === '') {
@@ -48,31 +118,29 @@ slackButton.addEventListener('click', function() {
     let newmsg = document.createTextNode('Enabled!');
     document.getElementsByName('webhook-form')[0].appendChild(newmsg);
     isWebhookGranted = true;
-    detectSoMoving();
   }
 });
 
-function sendSlackNotify() {
+function captureImg() {
   outputCanvas.toBlob(function(blob) {
     let wrapDiv = document.createElement('div');
     let savedDate = document.createElement('div');
     savedDate.textContent = new Date().toTimeString().replaceAll(' ', '_');
     let newImg = document.createElement("img");
     let url = URL.createObjectURL(blob);
-    slackFetch();
-    
+
     newImg.onload = function() {
       URL.revokeObjectURL(url);
     };
-    
+
     newImg.src = url;
     wrapDiv.appendChild(savedDate);
     wrapDiv.appendChild(newImg);
     document.querySelector('.save-area').prepend(wrapDiv);
   }, "image/png");
 }
-  
-function slackFetch() {
+
+function sendSlackNotify() {
   const data = {
     "blocks": [
       {
@@ -96,7 +164,7 @@ function slackFetch() {
   }
 
   const url = document.getElementById('webhook-url').value;
-  
+
   fetch(url, option)
   .then(response => {
     if (!response.ok) {
@@ -123,8 +191,11 @@ startButton.addEventListener('click', () => {
 
   console.log("reload...");
   isPlaying = true;
+  clearTimeout(soMovingTimeoutID);
+
   resetAll();
   startCapture(0);
+  soMovingTimeoutID = setTimeout(detectSoMoving, 1 * 1000);
   setTimeout(playVideo, 0);
 });
 
@@ -134,8 +205,12 @@ startButtonAsEnvCamera.addEventListener('click', () => {
   startButtonAsEnvCamera.disabled = true;
   console.log("reload...");
   isPlaying = true;
+  clearTimeout(soMovingTimeoutID);
+
   resetAll();
   startCapture(1);
+  // すぐにdetectSoMovingを実行すると，再スタート時に誤検知されるので1秒待つ
+  soMovingTimeoutID = setTimeout(detectSoMoving, 1 * 1000);
   setTimeout(playVideo, 0);
 });
 
@@ -200,7 +275,7 @@ function playVideo() {
   // 処理開始
   // convert to gray
   cv.cvtColor(src, grayImg, cv.COLOR_RGBA2GRAY);
-  
+
   // get "before"frame for compare
   if (JSON.stringify(before.data) == JSON.stringify(originalCV_8UC1.data)) {
     grayImg.copyTo(before);
@@ -238,7 +313,7 @@ function processImg() {
     detectArray.push(0);
     detectArray.shift();
   }
-  
+
   countArray.push(count);
   countArray.shift();
 
@@ -248,21 +323,27 @@ function processImg() {
 }
 
 function detectSoMoving() {
-  const isZero = (element) => element === 0;
+  if (!isCaptureGranted) {
+    soMovingTimeoutID = setTimeout(detectSoMoving, 30000);
+  }
+
+  const isZero = (element) => !element;
   if (!detectArray.some(isZero) && JSON.stringify(dst.data) != JSON.stringify(originalCV_8UC1.data)) {
-    document.getElementById('detect-status').innerHTML = "moved!!";
+    document.getElementById('detect-status').innerHTML = "Captured!!";
     isSoMoving = true;
+
+    captureImg();
 
     if (isWebhookGranted) {
       sendSlackNotify();
     }
-    
-    setTimeout(detectSoMoving, 30000);
+
+    soMovingTimeoutID = setTimeout(detectSoMoving, 30 * 1000);
 
   } else {
-    document.getElementById('detect-status').innerHTML = "probably no motion..?";
+    document.getElementById('detect-status').innerHTML = "Monitoring...";
     isSoMoving = false;
-    setTimeout(detectSoMoving);
+    soMovingTimeoutID = setTimeout(detectSoMoving);
   }
 }
 
@@ -308,7 +389,7 @@ function resetAll() {
   threshImg = new cv.Mat(HEIGHT, WIDTH, cv.CV_8UC4);
   contours = new cv.MatVector();
   hierarchy = new cv.Mat();
-  
+
   countArray = new Array(10).fill(0);
   weightArray = new Array(countArray.length);
   weightSum = 0;
@@ -317,7 +398,7 @@ function resetAll() {
 
   isPlaying = true;
   isSoMoving = false;
-  
+
   originalCV_8UC1.copyTo(dst);
   originalCV_8UC1.copyTo(before);
 
@@ -341,7 +422,7 @@ function onOpenCvReady() {
     resetAll();
 
     document.getElementById('status').innerHTML = 'Ready!';
-    
+
     startCapture(0);
     setTimeout(playVideo, 0); // schedule first one.
   };

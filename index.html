@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Move capture</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <script defer src="main.js"></script>
+    <script async src="opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  </head>
+  <body>
+    <h1>Move capture</h1>
+    <button class="a2hs-button">Add to Home Screen</button>
+    <p id="status">Now loading...</p>
+    <p id="detect-status"></p>
+    <p id="explanation">To use the capture and webhook function, <br>
+      please click the button below to set it up.</p>
+    <p id="count" style="display: none;">Count: </p>
+    <div class="video-area" style="width: 100%; height: 100%; display: none;">
+      <video id="main-video"
+      style="border: 1px solid #000000;"></video>
+    </div>
+    <div class="canvas-area" style="width: 100%; height: 100%;">
+      <canvas id="output-canvas"
+      style="border: 1px solid #000000;"></canvas>
+    </div>
+    <div class="button-area">
+      <button id="startButton" disabled="true">start(front cam)</button>
+      <button id="startButtonAsEnvCamera" disabled="true">start(rear cam)</button>
+      <button id="stopButton">stop</button>
+      <button id="capture-button">Enable Capture!</button>
+    </div>
+    <div>
+      <form name="webhook-form" style="display: inline-block;">
+        <input type="text" id="webhook-url" placeholder="Webhook url" style="width: 200px;">
+        <input type="button" id="slack-button" value="enable capture and webhook" disabled="true">
+      </form>
+    </div>
+    <div class="save-area" style="display: flex; overflow-x: scroll;"></div>
+  </body>
+</html>

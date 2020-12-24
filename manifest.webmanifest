@@ -1,0 +1,14 @@
+{
+    "backgroung_color": "LightGreen",
+    "display": "fullscreen",
+    "icons": [
+        {
+            "src": "icon/icon256.png",
+            "sizes": "256x256",
+            "type": "image/png"
+        }
+    ],
+    "name": "Move capture",
+    "short_name": "Detect",
+    "start_url": "/move-capture-pwa/index.html"
+}

@@ -4,15 +4,10 @@ self.addEventListener('install', function(event) {
     event.waitUntil(
         caches.open(cacheName).then(function(cache) {
             return cache.addAll([
-                // '/move-capture-pwa/',
-                '/moveCapture/',
-                // '/move-capture-pwa/index.html',
-                '/moveCapture/index.html',
-                // '/move-capture-pwa/main.js',
-                '/moveCapture/main.js',
-                // '/move-capture-pwa/opencv.js'
-                '/moveCapture/opencv.js',
-                '/moveCapture/style.css'
+                '/move-capture-pwa/',
+                '/move-capture-pwa/index.html',
+                '/move-capture-pwa/main.js',
+                '/move-capture-pwa/opencv.js'
             ]);
         })
     );
@@ -33,7 +28,6 @@ self.addEventListener('fetch', function(event) {
                     return response;
                 })
                 // .catch(function() {
-                   // return caches.match('/moveCapture/unko.png');
                 //     return caches.match('/move-capture-pwa/unko.png');
                 // });
             }

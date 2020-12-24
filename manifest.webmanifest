@@ -10,5 +10,5 @@
     ],
     "name": "Move capture",
     "short_name": "Detect",
-    "start_url": "/moveCapture/index.html"
+    "start_url": "/move-capture-pwa/index.html"
 }
